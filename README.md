@@ -625,5 +625,11 @@ MIT License - See LICENSE file
 
 ---
 
-**Built with ❤️ by Senior AI Development Team**  
-*25+ Years of Combined Experience*
+**Built with ❤️ by ANSH KUMAR PANDEY**  
+
+## 📬 Contact Information
+
+- **Developer:** Ansh Kumar Pandey
+- **Email:** [anshpandey162@gmail.com](mailto:anshpandey162@gmail.com)
+- **GitHub:** [github.com/anshpandey162](https://github.com/Ansh8905/RideShare--Chatbot)
+

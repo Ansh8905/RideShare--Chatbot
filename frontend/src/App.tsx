@@ -29,9 +29,8 @@ interface RideData {
   };
 }
 
-
 const App: React.FC = () => {
-  const [isChatbotOpen, setIsChatbotOpen] = useState(true);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false); // Default to closed for floating button demo
   const [rideData, setRideData] = useState<RideData | null>(null);
 
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -173,10 +172,6 @@ const App: React.FC = () => {
             <span className="status-dot active"></span>
             {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </div>
-          <div className="status-badge">
-            <span className="status-dot active"></span>
-            API Connected
-          </div>
         </div>
       </nav>
 
@@ -269,29 +264,31 @@ const App: React.FC = () => {
         </div>
 
         {/* Right — Chat Panel */}
-        {isChatbotOpen && (
-          <div className="chat-panel" id="chat-panel">
-            <Chatbot
-              bookingId={bookingId}
-              userId={userId}
-              driverId={driverId}
-              apiUrl={apiUrl}
-              onEscalation={handleEscalation}
-              onClose={handleCloseChatbot}
-            />
-          </div>
-        )}
+        {/* Right — Chat Panel (Hidden for full-screen mode) */}
       </div>
 
-      {/* Open Chat Button when closed */}
+      {/* BRD-Compliant Chatbot (Full-Screen Overlay) */}
+      {isChatbotOpen && (
+        <div className="chatbot-fullscreen-overlay">
+          <Chatbot
+            bookingId={bookingId}
+            userId={userId}
+            driverId={driverId}
+            apiUrl={apiUrl}
+            onEscalation={handleEscalation}
+            onClose={handleCloseChatbot}
+          />
+        </div>
+      )}
+
+      {/* Floating Chat Button */}
       {!isChatbotOpen && (
         <button
-          className="open-chat-btn"
+          className="d2d-floating-chat-btn"
           onClick={() => setIsChatbotOpen(true)}
-          id="btn-open-chat"
+          aria-label="Open Chat"
         >
           💬
-          <span className="notification-dot"></span>
         </button>
       )}
     </div>

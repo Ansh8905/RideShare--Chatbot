@@ -162,6 +162,9 @@ class ChatbotService {
     try {
       const { conversationId, bookingId, userId, userInput } = request;
 
+      // Cancel any pending session completion timer (user is active again)
+      this.cancelSessionTimer(conversationId);
+
       // ── 1. Safety check first (BRD §Epic 6) ──
       const safetyEvent = safetyDetectionService.detectSafetyConcerns(
         userInput,
@@ -296,13 +299,18 @@ class ChatbotService {
         requiresEscalation,
         escalationType,
         metadata: {
-          intent: intentResult.intent,
+          intent: flowResult.intent === 'conversation_close' ? 'conversation_close' : intentResult.intent,
           confidence: intentResult.confidence,
           flowType: intentResult.intent,
           responseTimeMs,
         },
         bookingContext: this.buildBookingContext(bookingDetails, driverDetails),
       };
+
+      // Session behavior: if gratitude detected, schedule session completion
+      if (intentResult.intent === 'gratitude' || flowResult.sessionAction === 'mark_closing') {
+        this.scheduleSessionCompletion(conversationId, 3 * 60 * 1000); // 3 minutes
+      }
 
       logger.info('Message processed', {
         conversationId,
@@ -428,6 +436,12 @@ class ChatbotService {
           `I'm connecting you with a human support agent. Your chat history and booking context will be shared with them automatically.\n\n` +
           `⏳ Estimated wait: 1-2 minutes\n` +
           `📋 Ticket created for your issue.`;
+      }
+
+      // ── Gratitude / Conversation Close ──
+      case 'gratitude': {
+        // The decision tree already generates a brand-aligned response
+        return flowResult.message;
       }
 
       default:
@@ -637,6 +651,52 @@ class ChatbotService {
       cancelled: '❌ Cancelled',
     };
     return statusMap[status] || status;
+  }
+
+  // ────────────────────────────────────────────
+  // Smart Session Timeout: 3-min inactivity after close
+  // If user remains inactive, mark conversation completed
+  // ────────────────────────────────────────────
+  private sessionTimers: Map<string, NodeJS.Timeout> = new Map();
+
+  private scheduleSessionCompletion(conversationId: string, delayMs: number): void {
+    // Clear any existing timer for this conversation
+    const existingTimer = this.sessionTimers.get(conversationId);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+    }
+
+    // Schedule auto-completion after inactivity
+    const timer = setTimeout(async () => {
+      try {
+        const conversation = await conversationService.getConversation(conversationId);
+        // Only auto-complete if still active (user hasn't sent new messages)
+        if (conversation && conversation.status === 'active') {
+          await conversationService.addMessage(conversationId, 'bot',
+            '👋 This conversation has been marked as completed. Thank you for using Door2Door Flights! Open the chat anytime if you need more help.',
+            { intent: 'session_auto_close', automated: true }
+          );
+          logger.info('Session auto-completed after inactivity', { conversationId });
+        }
+      } catch (error) {
+        logger.error('Error auto-completing session', { conversationId, error });
+      } finally {
+        this.sessionTimers.delete(conversationId);
+      }
+    }, delayMs);
+
+    this.sessionTimers.set(conversationId, timer);
+    logger.info('Session completion scheduled', { conversationId, delayMs });
+  }
+
+  // Cancel session timer when user sends a new message
+  cancelSessionTimer(conversationId: string): void {
+    const timer = this.sessionTimers.get(conversationId);
+    if (timer) {
+      clearTimeout(timer);
+      this.sessionTimers.delete(conversationId);
+      logger.info('Session timer cancelled (user active)', { conversationId });
+    }
   }
 }
 

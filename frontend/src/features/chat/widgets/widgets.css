@@ -1,0 +1,372 @@
+/* ============================================================
+   BRD-Compliant Chat Widgets Styling
+   Golden Yellow Theme (#E6A81E)
+   ============================================================ */
+
+/* Chat Bubble */
+.chat-bubble-container {
+    display: flex;
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
+.chat-bubble-container.user {
+    justify-content: flex-end;
+}
+
+.chat-bubble-container.bot {
+    justify-content: flex-start;
+}
+
+.chat-bubble {
+    max-width: 80%;
+    padding: 1rem 1.5rem;
+    border-radius: 18px;
+    position: relative;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* User Message */
+.user-bg {
+    background-color: #E6A81E;
+    color: #FFFFFF;
+    border-bottom-right-radius: 4px;
+}
+
+/* Bot Message */
+.bot-bg {
+    background-color: #FFFFFF;
+    color: #333333;
+    border: 1px solid #E0E0E0;
+    border-bottom-left-radius: 4px;
+}
+
+.chat-text {
+    margin: 0;
+    word-wrap: break-word;
+}
+
+.chat-timestamp {
+    font-size: 0.7rem;
+    opacity: 0.7;
+    display: block;
+    text-align: right;
+    margin-top: 0.25rem;
+}
+
+/* Loading Animation */
+.loading-bubble {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    min-width: 60px;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #ccc;
+    border-radius: 50%;
+    animation: typing 1.4s infinite ease-in-out both;
+}
+
+.typing-dot:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.typing-dot:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes typing {
+
+    0%,
+    80%,
+    100% {
+        transform: scale(0);
+    }
+
+    40% {
+        transform: scale(1);
+    }
+}
+
+/* Input Area */
+.chat-input-container {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background-color: #FFFFFF;
+    border-top: 1px solid #E0E0E0;
+}
+
+.chat-input-field {
+    flex: 1;
+    padding: 0.875rem 1.25rem;
+    border: 2px solid transparent;
+    border-radius: 25px;
+    background-color: #F5F5F5;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.chat-input-field:focus {
+    border-color: #E6A81E;
+    background-color: #FFFFFF;
+    box-shadow: 0 0 0 3px rgba(230, 168, 30, 0.1);
+}
+
+.chat-send-btn {
+    margin-left: 0.75rem;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #E6A81E 0%, #FFC107 100%);
+    color: white;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 15px rgba(230, 168, 30, 0.3);
+}
+
+.chat-send-btn:hover:not(:disabled) {
+    transform: scale(1.05);
+}
+
+.chat-send-btn:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.chat-send-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* ============================================================
+   BRD §5.2: Booking Context Bar
+   ============================================================ */
+.booking-context-bar {
+    background: linear-gradient(135deg, #FFF9E6 0%, #FFFBF0 100%);
+    border: 1px solid #FFE9B3;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+}
+
+.context-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.context-row:last-child {
+    margin-bottom: 0;
+}
+
+.context-label {
+    font-weight: 600;
+    color: #333;
+}
+
+.context-status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-confirmed {
+    background: #E3F2FD;
+    color: #1976D2;
+}
+
+.status-progress {
+    background: #FFF3E0;
+    color: #F57C00;
+}
+
+.status-arrived {
+    background: #E8F5E9;
+    color: #388E3C;
+}
+
+.status-completed {
+    background: #F3E5F5;
+    color: #7B1FA2;
+}
+
+.status-cancelled {
+    background: #FFEBEE;
+    color: #C62828;
+}
+
+.context-detail {
+    color: #666;
+    font-size: 0.85rem;
+}
+
+.context-route {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #555;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #FFE9B3;
+}
+
+.route-arrow {
+    color: #E6A81E;
+    font-weight: bold;
+}
+
+/* ============================================================
+   BRD Epic 3: Quick Actions
+   ============================================================ */
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+    padding: 1rem;
+    background-color: #FAFAFA;
+    border-top: 1px solid #E0E0E0;
+}
+
+.quick-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: #FFFFFF;
+    border: 1px solid #E0E0E0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.85rem;
+    color: #333;
+}
+
+.quick-action-btn:hover:not(:disabled) {
+    background: #FFF9E6;
+    border-color: #E6A81E;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(230, 168, 30, 0.15);
+}
+
+.quick-action-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.quick-action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.quick-action-btn.btn-danger {
+    background: #FFEBEE;
+    border-color: #FFCDD2;
+    color: #C62828;
+}
+
+.quick-action-btn.btn-danger:hover:not(:disabled) {
+    background: #FFCDD2;
+    border-color: #EF5350;
+}
+
+.quick-action-btn.btn-warning {
+    background: #FFF3E0;
+    border-color: #FFE0B2;
+    color: #E65100;
+}
+
+.quick-action-btn.btn-warning:hover:not(:disabled) {
+    background: #FFE0B2;
+    border-color: #FB8C00;
+}
+
+.qa-icon {
+    font-size: 1.2rem;
+}
+
+.qa-label {
+    flex: 1;
+    text-align: left;
+    font-weight: 500;
+}
+
+/* ============================================================
+   BRD §5.5: Escalation Notice
+   ============================================================ */
+.escalation-notice {
+    margin: 1rem;
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.escalation-notice p {
+    margin: 0;
+    line-height: 1.5;
+}
+
+.escalation-notice strong {
+    font-weight: 700;
+}
+
+.escalation-safety {
+    background: #FFEBEE;
+    border: 2px solid #EF5350;
+    color: #C62828;
+}
+
+.escalation-driver {
+    background: #E3F2FD;
+    border: 2px solid #42A5F5;
+    color: #1565C0;
+}
+
+.escalation-support {
+    background: #FFF3E0;
+    border: 2px solid #FFA726;
+    color: #E65100;
+}

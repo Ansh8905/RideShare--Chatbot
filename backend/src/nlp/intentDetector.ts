@@ -25,6 +25,7 @@ class NLPService {
       ['call_driver', 'call_driver'],
       ['message_driver', 'message_driver'],
       ['talk_to_agent', 'talk_to_agent'],
+      ['gratitude', 'ok_thanks'],
     ]);
   }
 
@@ -203,6 +204,33 @@ class NLPService {
         'human support',
         'real person please',
       ],
+      gratitude: [
+        'thanks',
+        'thank you',
+        'ok thanks',
+        'okay thank you',
+        'great thanks',
+        'got it thanks',
+        'perfect thanks',
+        'thanks a lot',
+        'thank you so much',
+        'many thanks',
+        'appreciate it',
+        'thx',
+        'ty',
+        'thanks for the help',
+        'thanks for your help',
+        'that helps thank you',
+        'wonderful thanks',
+        'awesome thanks',
+        'cool thanks',
+        'alright thank you',
+        'noted thanks',
+        'cheers',
+        'much appreciated',
+        'thanks bye',
+        'ok thank you bye',
+      ],
     };
 
     // Train the classifier
@@ -331,6 +359,10 @@ class NLPService {
       safety_concern: [
         'Your safety is important. I\'m connecting you with support immediately...',
         'Emergency support is being dispatched. Stay in a public place if possible.',
+      ],
+      gratitude: [
+        'You\'re welcome! Happy to help with your ride.',
+        'Glad I could help! Have a great trip.',
       ],
       unknown: [
         'I\'m not sure I understood. Could you rephrase that?',

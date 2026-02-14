@@ -32,6 +32,7 @@ class DecisionTreeEngine {
       ['message_driver', this.createMessageDriverFlow()],
       ['talk_to_agent', this.createTalkToAgentFlow()],
       ['ok_thanks', this.createOkThanksFlow()],
+      ['gratitude', this.createGratitudeFlow()],
     ]);
   }
 
@@ -411,6 +412,37 @@ class DecisionTreeEngine {
       type: 'message',
       message: '😊 You\'re welcome! If you need anything else during your ride, just tap a quick action or type your question. Have a great ride!',
       suggestedActions: ['where_is_driver', 'contact_driver', 'payment_query'],
+    };
+  }
+
+  // ─────────────────────────────────────────────
+  // Gratitude / Conversation Close Flow
+  // Brand-aligned closing with Door2Door branding
+  // ─────────────────────────────────────────────
+  private createGratitudeFlow(): DecisionTreeNode {
+    return {
+      id: 'gratitude_close',
+      type: 'action',
+      message: 'Thank you for choosing Door2Door Flights!',
+      handler: async (_context) => {
+        // Pick a closing response randomly for variety
+        const closingResponses = [
+          `You're welcome! 😊 Thank you for choosing Door2Door Flights. If you need any further assistance with bookings, prices, or trips, I'm here to help.`,
+          `Happy to help! 😊 Thank you for riding with Door2Door Flights. Don't hesitate to reach out if you need anything else during your ride.`,
+          `Glad I could assist! 😊 At Door2Door Flights, your comfort is our priority. Feel free to ask if you need anything else.`,
+        ];
+
+        const reply = closingResponses[Math.floor(Math.random() * closingResponses.length)];
+
+        return {
+          success: true,
+          message: reply,
+          intent: 'conversation_close',
+          // Offer quick re-engagement options
+          suggestedActions: ['where_is_driver', 'payment_query', 'contact_driver'],
+          sessionAction: 'mark_closing',
+        };
+      },
     };
   }
 

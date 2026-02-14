@@ -392,4 +392,48 @@ router.get('/health', (_req: Request, res: Response) => {
   });
 });
 
+// ─────────────────────────────────────────────────
+// POST /api/chatbot/chat
+// Dummy API for testing dynamic responses
+// ─────────────────────────────────────────────────
+router.post(
+  '/chat',
+  asyncHandler(async (req: Request, res: Response) => {
+    const { message, userId } = req.body;
+
+    // Simulate network delay
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    let reply = 'This is a dummy response from API. How can I help you today?';
+    let intent = 'general/help';
+
+    if (message) {
+      const lowerMsg = message.toLowerCase();
+      if (lowerMsg.includes('thank') || lowerMsg.includes('thanks') || lowerMsg.includes('thx') || lowerMsg.includes('cheers') || lowerMsg.includes('appreciate')) {
+        reply = 'You\'re welcome! 😊 Thank you for choosing Door2Door Flights. If you need any further assistance with bookings, prices, or trips, I\'m here to help.';
+        intent = 'conversation_close';
+      } else if (lowerMsg.includes('flight')) {
+        reply = 'We can help you track your flight status. Please provide your flight number.';
+        intent = 'flight/status';
+      } else if (lowerMsg.includes('price') || lowerMsg.includes('fare') || lowerMsg.includes('cost')) {
+        reply = 'The estimated fare for your current trip is $24.50. This includes all taxes and fees.';
+        intent = 'booking/price';
+      } else if (lowerMsg.includes('driver')) {
+        reply = 'Your driver is 5 minutes away and is driving a Toyota Camry (License: ABC-123).';
+        intent = 'trip/driver_info';
+      } else if (lowerMsg.includes('hello') || lowerMsg.includes('hi')) {
+        reply = 'Hello! Welcome to RideShare Support. How can I assist you with your ride today?';
+        intent = 'general/greeting';
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      reply,
+      intent,
+      timestamp: new Date().toISOString(),
+    });
+  })
+);
+
 export default router;

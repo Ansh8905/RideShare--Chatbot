@@ -129,7 +129,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
     return icons[action] || '💬';
   };
 
-  // BRD §5.4 / Epic 4: Free-text NLP query
+  // BRD §5.4 / Epic 4: Free-text NLP query — ALL responses from live API
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -150,6 +150,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
     setError(null);
 
     try {
+      // Call LIVE API endpoint /api/chatbot/message
       const response = await apiService.current.sendMessage(
         conversationId,
         bookingId,
@@ -188,11 +189,12 @@ const Chatbot: React.FC<ChatbotProps> = ({
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to send message';
       setError(errorMessage);
+      console.error('Chat API Error:', err);
 
       const errorBotMessage: Message = {
         id: `msg_${Date.now() + 1}`,
         sender: 'bot',
-        text: '⚠️ Sorry, something went wrong. Let me connect you with support.',
+        text: '⚠️ Sorry, something went wrong. Please try again.',
         timestamp: new Date(),
       };
 
@@ -378,16 +380,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
                       minute: '2-digit',
                     })}
                   </span>
-                  {message.sender === 'bot' && message.metadata?.source === 'api' && (
-                    <span className="message-api-badge">
-                      ⚡ API {message.metadata?.responseTimeMs ? `${message.metadata.responseTimeMs}ms` : ''}
-                    </span>
-                  )}
-                  {message.metadata?.intent && message.metadata.intent !== 'error' && (
-                    <span className="message-intent-badge">
-                      {message.metadata.intent.replace(/_/g, ' ')}
-                    </span>
-                  )}
+
                 </div>
               </div>
             </div>
@@ -483,9 +476,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
             </button>
           </form>
 
-          <div className="chat-powered-by">
-            Responses powered by RideSharePro API • Real-time data
-          </div>
+
         </>
       )}
     </div>

@@ -1,9 +1,10 @@
 // ============================================================
 // RideSharePro — Live Google Map Component
 // Shows driver location, pickup/dropoff markers, and route
+// Works with OR without a Google Maps API key
 // ============================================================
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import {
     GoogleMap,
     useJsApiLoader,
@@ -22,8 +23,19 @@ interface LiveMapProps {
     rideStatus: string;
 }
 
+// Libraries array MUST be defined outside the component to prevent
+// useJsApiLoader from re-initializing on every render
+const LIBRARIES: ('places')[] = ['places'];
+
+const containerStyle = {
+    width: '100%',
+    height: '100%',
+    borderRadius: '16px',
+};
+
 // Minimal Light theme map style for premium look
-const lightMapStyle: google.maps.MapTypeStyle[] = [
+// Typed as any[] to avoid referencing google.maps before API loads
+const lightMapStyle: any[] = [
     {
         featureType: 'water',
         elementType: 'geometry',
@@ -93,13 +105,8 @@ const lightMapStyle: google.maps.MapTypeStyle[] = [
     },
 ];
 
-const containerStyle = {
-    width: '100%',
-    height: '100%',
-    borderRadius: '16px',
-};
-
-const LiveMap: React.FC<LiveMapProps> = ({
+// ── Interactive CSS-based map fallback ──
+const FallbackMap: React.FC<LiveMapProps> = ({
     driverLocation,
     pickupLocation,
     dropoffLocation,
@@ -108,12 +115,176 @@ const LiveMap: React.FC<LiveMapProps> = ({
     driverEta,
     rideStatus,
 }) => {
-    const apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '';
-    const { isLoaded, loadError } = useJsApiLoader({
-        googleMapsApiKey: apiKey,
-        libraries: ['places'],
+    const [animPercent, setAnimPercent] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setAnimPercent((prev) => (prev >= 100 ? 0 : prev + 0.5));
+        }, 50);
+        return () => clearInterval(interval);
+    }, []);
+
+    // Calculate relative positions for the markers based on lat/lng
+    const allLats = [driverLocation.lat, pickupLocation.lat, dropoffLocation.lat];
+    const allLngs = [driverLocation.lng, pickupLocation.lng, dropoffLocation.lng];
+    const minLat = Math.min(...allLats);
+    const maxLat = Math.max(...allLats);
+    const minLng = Math.min(...allLngs);
+    const maxLng = Math.max(...allLngs);
+    const latRange = maxLat - minLat || 0.01;
+    const lngRange = maxLng - minLng || 0.01;
+
+    const toPercent = (loc: { lat: number; lng: number }) => ({
+        // Invert lat since CSS top goes downward
+        top: 15 + (1 - (loc.lat - minLat) / latRange) * 70,
+        left: 15 + ((loc.lng - minLng) / lngRange) * 70,
     });
 
+    const pickupPos = toPercent(pickupLocation);
+    const dropoffPos = toPercent(dropoffLocation);
+
+    // Animate driver along the line from pickup toward dropoff
+    const animDriverTop = pickupPos.top + (dropoffPos.top - pickupPos.top) * (animPercent / 100);
+    const animDriverLeft = pickupPos.left + (dropoffPos.left - pickupPos.left) * (animPercent / 100);
+
+    const getStatusColor = (status: string) => {
+        const colors: Record<string, string> = {
+            confirmed: '#55efc4',
+            in_progress: '#74b9ff',
+            in_transit: '#F4B400',
+            arrived: '#00b894',
+            completed: '#6c5ce7',
+        };
+        return colors[status] || '#a29bfe';
+    };
+
+    return (
+        <div className="map-container map-fallback-interactive" id="map-view">
+            {/* Animated grid background */}
+            <div className="map-fallback-grid" />
+
+            {/* Route line from pickup to dropoff */}
+            <svg
+                className="map-fallback-svg"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+            >
+                <defs>
+                    <linearGradient id="routeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#55efc4" />
+                        <stop offset="50%" stopColor="#F4B400" />
+                        <stop offset="100%" stopColor="#e17055" />
+                    </linearGradient>
+                </defs>
+                {/* Route path */}
+                <line
+                    x1={pickupPos.left}
+                    y1={pickupPos.top}
+                    x2={dropoffPos.left}
+                    y2={dropoffPos.top}
+                    stroke="url(#routeGrad)"
+                    strokeWidth="0.8"
+                    strokeDasharray="2,1"
+                    strokeLinecap="round"
+                    opacity="0.7"
+                />
+                {/* Driver trail */}
+                <line
+                    x1={pickupPos.left}
+                    y1={pickupPos.top}
+                    x2={animDriverLeft}
+                    y2={animDriverTop}
+                    stroke="#F4B400"
+                    strokeWidth="1"
+                    strokeLinecap="round"
+                    opacity="0.5"
+                />
+            </svg>
+
+            {/* Pickup marker */}
+            <div
+                className="map-fallback-marker marker-pickup"
+                style={{ top: `${pickupPos.top}%`, left: `${pickupPos.left}%` }}
+                title="Pickup Location"
+            >
+                <span className="marker-emoji">📍</span>
+                <div className="marker-label">Pickup</div>
+                <div className="marker-pulse pickup-pulse" />
+            </div>
+
+            {/* Dropoff marker */}
+            <div
+                className="map-fallback-marker marker-dropoff"
+                style={{ top: `${dropoffPos.top}%`, left: `${dropoffPos.left}%` }}
+                title="Dropoff Location"
+            >
+                <span className="marker-emoji">🏁</span>
+                <div className="marker-label">Dropoff</div>
+            </div>
+
+            {/* Animated driver marker */}
+            <div
+                className="map-fallback-marker marker-driver"
+                style={{ top: `${animDriverTop}%`, left: `${animDriverLeft}%` }}
+                title={`${driverName} - ${driverVehicle}`}
+            >
+                <span className="marker-emoji">🚗</span>
+                <div className="marker-driver-ring" />
+            </div>
+
+            {/* Info overlay at bottom */}
+            <div className="map-overlay-bar">
+                <div className="map-overlay-item">
+                    <span className="map-overlay-icon">🚗</span>
+                    <span>{driverName}</span>
+                </div>
+                <div className="map-overlay-divider" />
+                <div className="map-overlay-item">
+                    <span className="map-overlay-icon">🚘</span>
+                    <span>{driverVehicle}</span>
+                </div>
+                <div className="map-overlay-divider" />
+                <div className="map-overlay-item">
+                    <span className="map-overlay-icon">⏱️</span>
+                    <span>{driverEta} min</span>
+                </div>
+                <div className="map-overlay-divider" />
+                <div
+                    className="map-overlay-item"
+                    style={{ color: getStatusColor(rideStatus) }}
+                >
+                    <span className="map-pulse-dot" style={{ background: getStatusColor(rideStatus) }} />
+                    <span style={{ fontWeight: 700, fontSize: '10px', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                        {rideStatus.replace(/_/g, ' ')}
+                    </span>
+                </div>
+            </div>
+
+            {/* Coordinate info chips */}
+            <div className="map-fallback-coords">
+                <div className="map-coord-chip">
+                    <span>📍</span>
+                    <span>{pickupLocation.lat.toFixed(4)}, {pickupLocation.lng.toFixed(4)}</span>
+                </div>
+                <div className="map-coord-chip">
+                    <span>🏁</span>
+                    <span>{dropoffLocation.lat.toFixed(4)}, {dropoffLocation.lng.toFixed(4)}</span>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ── Google Maps live component ──
+const GoogleMapView: React.FC<LiveMapProps & { isLoaded: boolean }> = ({
+    driverLocation,
+    pickupLocation,
+    dropoffLocation,
+    driverName,
+    driverVehicle,
+    driverEta,
+    rideStatus,
+}) => {
     const mapRef = useRef<google.maps.Map | null>(null);
     const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
     const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
@@ -153,64 +324,18 @@ const LiveMap: React.FC<LiveMapProps> = ({
         [driverLocation, pickupLocation, dropoffLocation]
     );
 
-    // Fallback UI when API key is missing
-    if (!apiKey) {
-        return (
-            <div className="map-container" id="map-view">
-                <div className="map-no-key">
-                    <div className="map-no-key-icon">🗺️</div>
-                    <div className="map-no-key-title">Google Maps</div>
-                    <div className="map-no-key-subtitle">
-                        Add your API key to <code>.env</code> to enable live maps
-                    </div>
-                    <div className="map-no-key-code">
-                        REACT_APP_GOOGLE_MAPS_API_KEY=your_key_here
-                    </div>
-                    <div className="map-coords">
-                        <div className="map-coord-item">
-                            <span className="coord-icon">🚗</span>
-                            <span>Driver: {driverLocation.lat.toFixed(4)}, {driverLocation.lng.toFixed(4)}</span>
-                        </div>
-                        <div className="map-coord-item">
-                            <span className="coord-icon">📍</span>
-                            <span>Pickup: {pickupLocation.lat.toFixed(4)}, {pickupLocation.lng.toFixed(4)}</span>
-                        </div>
-                        <div className="map-coord-item">
-                            <span className="coord-icon">🏁</span>
-                            <span>Dropoff: {dropoffLocation.lat.toFixed(4)}, {dropoffLocation.lng.toFixed(4)}</span>
-                        </div>
-                    </div>
-                    <div className="map-label">
-                        <span className="map-label-icon">⏱️</span>
-                        ETA: {driverEta} min • {rideStatus}
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    if (loadError) {
-        return (
-            <div className="map-container" id="map-view">
-                <div className="map-no-key">
-                    <div className="map-no-key-icon">⚠️</div>
-                    <div className="map-no-key-title">Map Load Error</div>
-                    <div className="map-no-key-subtitle">{loadError.message}</div>
-                </div>
-            </div>
-        );
-    }
-
-    if (!isLoaded) {
-        return (
-            <div className="map-container" id="map-view">
-                <div className="map-no-key">
-                    <div className="map-loading-spinner"></div>
-                    <div className="map-no-key-title">Loading Map...</div>
-                </div>
-            </div>
-        );
-    }
+    const mapOptions = useMemo(
+        () => ({
+            styles: lightMapStyle,
+            disableDefaultUI: true,
+            zoomControl: true,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: true,
+            gestureHandling: 'greedy' as const,
+        }),
+        []
+    );
 
     return (
         <div className="map-container map-container-live" id="map-view">
@@ -219,15 +344,7 @@ const LiveMap: React.FC<LiveMapProps> = ({
                 center={driverPosition}
                 zoom={14}
                 onLoad={onMapLoad}
-                options={{
-                    styles: lightMapStyle,
-                    disableDefaultUI: true,
-                    zoomControl: true,
-                    mapTypeControl: false,
-                    streetViewControl: false,
-                    fullscreenControl: true,
-                    gestureHandling: 'greedy',
-                }}
+                options={mapOptions}
             >
                 {/* Driver marker */}
                 <Marker
@@ -353,19 +470,54 @@ const LiveMap: React.FC<LiveMapProps> = ({
                     <span className="map-overlay-icon">🚗</span>
                     <span>{driverName}</span>
                 </div>
-                <div className="map-overlay-divider"></div>
+                <div className="map-overlay-divider" />
                 <div className="map-overlay-item">
                     <span className="map-overlay-icon">⏱️</span>
                     <span>{driverEta} min</span>
                 </div>
-                <div className="map-overlay-divider"></div>
+                <div className="map-overlay-divider" />
                 <div className="map-overlay-item map-overlay-live">
-                    <span className="map-pulse-dot"></span>
+                    <span className="map-pulse-dot" />
                     <span>LIVE</span>
                 </div>
             </div>
         </div>
     );
+};
+
+// ── Main LiveMap wrapper ──
+const LiveMap: React.FC<LiveMapProps> = (props) => {
+    const apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '';
+
+    const { isLoaded, loadError } = useJsApiLoader({
+        googleMapsApiKey: apiKey,
+        libraries: LIBRARIES,
+    });
+
+    // No API key → show the premium fallback map
+    if (!apiKey) {
+        return <FallbackMap {...props} />;
+    }
+
+    // API key present but loading failed → show fallback with error note
+    if (loadError) {
+        return <FallbackMap {...props} />;
+    }
+
+    // Still loading
+    if (!isLoaded) {
+        return (
+            <div className="map-container" id="map-view">
+                <div className="map-no-key">
+                    <div className="map-loading-spinner" />
+                    <div className="map-no-key-title">Loading Map...</div>
+                </div>
+            </div>
+        );
+    }
+
+    // Fully loaded → real Google Map
+    return <GoogleMapView {...props} isLoaded={isLoaded} />;
 };
 
 export default LiveMap;

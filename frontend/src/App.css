@@ -218,7 +218,7 @@ body::before {
 .app-dashboard {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr 420px;
+  grid-template-columns: 1fr;
   gap: 0;
   min-height: calc(100vh - 73px);
 }
@@ -1007,6 +1007,172 @@ body::before {
     transform: rotate(360deg);
   }
 }
+
+/* ── Interactive Fallback Map ── */
+.map-fallback-interactive {
+  position: relative;
+  height: 350px;
+  background: linear-gradient(145deg, #f8f9fb 0%, #eef1f5 100%);
+  overflow: hidden;
+  cursor: grab;
+}
+
+.map-fallback-interactive:active {
+  cursor: grabbing;
+}
+
+.map-fallback-grid {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(rgba(108, 92, 231, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(108, 92, 231, 0.04) 1px, transparent 1px);
+  background-size: 30px 30px;
+  animation: mapScroll 25s linear infinite;
+}
+
+.map-fallback-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* ── Fallback Markers ── */
+.map-fallback-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  transition: top 0.3s ease, left 0.3s ease;
+}
+
+.marker-emoji {
+  font-size: 28px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+  transition: transform 0.2s ease;
+}
+
+.map-fallback-marker:hover .marker-emoji {
+  transform: scale(1.25);
+}
+
+.marker-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(6px);
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid var(--border-subtle);
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.marker-driver .marker-emoji {
+  animation: driverBounce 2s ease-in-out infinite;
+}
+
+@keyframes driverBounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.marker-driver-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  border: 2px solid rgba(244, 180, 0, 0.4);
+  border-radius: 50%;
+  transform: translate(-50%, -60%);
+  animation: ringPulse 2s ease-out infinite;
+}
+
+@keyframes ringPulse {
+  0% {
+    width: 30px;
+    height: 30px;
+    opacity: 0.8;
+  }
+
+  100% {
+    width: 60px;
+    height: 60px;
+    opacity: 0;
+  }
+}
+
+.marker-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  transform: translate(-50%, -60%);
+  animation: markerPulse 2.5s ease-out infinite;
+}
+
+.pickup-pulse {
+  background: rgba(85, 239, 196, 0.3);
+}
+
+@keyframes markerPulse {
+  0% {
+    width: 20px;
+    height: 20px;
+    opacity: 0.6;
+  }
+
+  100% {
+    width: 50px;
+    height: 50px;
+    opacity: 0;
+  }
+}
+
+/* ── Fallback Coordinate Chips ── */
+.map-fallback-coords {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 10;
+}
+
+.map-coord-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--text-secondary);
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  border-radius: 20px;
+  border: 1px solid var(--border-subtle);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+}
+
 
 /* ── Full-Screen Chatbot Overlay ── */
 .chatbot-fullscreen-overlay {
